@@ -476,9 +476,6 @@ importers:
 
   packages/rich-content:
     dependencies:
-      '@highlighters/core':
-        specifier: ^2.0.0
-        version: 2.0.0
       '@shikijs/langs':
         specifier: 4.5.0
         version: 4.5.0
@@ -2336,10 +2333,6 @@ packages:
     resolution: {integrity: sha512-s/SMyjnUEhR3B8JqFKqMKNOXkO93FABR3FkrHNaOXDuxd6FfTW9utIZ0Q86H7LVG/sSI7gVTJGZsyXoNVU8VAw==}
     peerDependencies:
       react: 19.3.1
-
-  '@highlighters/core@2.0.0':
-    resolution: {integrity: sha512-OxuorhZZeqDIExovmOBdYLJLLqHsDXTU/YzsO42BPbNTSXqA579dWjoZHJI4I7Wg9jOt7EVLp60aIrNTQTyiqQ==}
-    engines: {node: '>=18'}
 
   '@iconify-json/material-icon-theme@1.2.72':
     resolution: {integrity: sha512-zNe7VGXvUGMeexC8DTSa+NNF2ng5gLAgQL8GQgEBLfqnG7W52dfL/X8cwNx5OmhaZkA+fuKZ6DFVrDdg5vqp/Q==}
@@ -9505,8 +9498,6 @@ snapshots:
   '@haklex/rich-style-token@0.47.0(react@19.3.1)':
     dependencies:
       react: 19.3.1
-
-  '@highlighters/core@2.0.0': {}
 
   '@iconify-json/material-icon-theme@1.2.72':
     dependencies:
