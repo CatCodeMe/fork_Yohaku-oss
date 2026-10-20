@@ -4,15 +4,16 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { InsightsPre } from './insights-code'
-import { InsightsMermaid } from './insights-mermaid'
 
-const renderMermaidSVG = vi.hoisted(() =>
-  vi.fn((content: string) => `<svg viewBox="0 0 80 40"><text>${content}</text></svg>`),
+const mountAsync = vi.hoisted(() =>
+  vi.fn(async (element: HTMLElement, text: string) => {
+    if (text === 'not mermaid') throw new Error('bad fence')
+    element.innerHTML = `<svg viewBox="0 0 80 40"><text>${text}</text></svg>`
+    return { destroy: vi.fn(), update: vi.fn() }
+  }),
 )
 
-vi.mock('beautiful-mermaid', () => ({ renderMermaidSVG }))
-
-const PNG = 'data:image/png;base64,QQ=='
+vi.mock('pele/lazy', () => ({ mountAsync }))
 
 const host: HostCapabilities = {
   apiBase: 'https://example.com/api',
@@ -31,19 +32,21 @@ const host: HostCapabilities = {
   webOrigin: 'https://example.com',
 }
 
-describe('InsightsMermaid', () => {
+const mermaidFence = (text: string) => (
+  <InsightsPre>
+    <code className="language-mermaid">{text}</code>
+  </InsightsPre>
+)
+
+describe('InsightsPre mermaid fences (Pele)', () => {
   let mountEl: HTMLDivElement
   let root: Root
 
   beforeEach(() => {
-    renderMermaidSVG.mockClear()
+    mountAsync.mockClear()
     mountEl = document.createElement('div')
     document.body.append(mountEl)
     root = createRoot(mountEl)
-    HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
-      drawImage: vi.fn(),
-    })) as never
-    HTMLCanvasElement.prototype.toDataURL = vi.fn(() => PNG)
   })
 
   afterEach(() => {
@@ -52,118 +55,63 @@ describe('InsightsMermaid', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders a diagram img from beautiful-mermaid with the light palette', async () => {
+  it('mounts the fence with Pele, without in-place zoom', async () => {
     await act(async () => {
       root.render(
         <HostProvider host={host}>
-          <InsightsMermaid content="graph TD; A-->B;" />
+          {mermaidFence('graph TD; A-->B;')}
         </HostProvider>,
       )
     })
 
-    expect(renderMermaidSVG).toHaveBeenCalledWith('graph TD; A-->B;', {
-      bg: '#ffffff',
-      fg: '#262626',
-    })
-    const img = mountEl.querySelector(
-      'img[alt="Mermaid diagram"]',
-    ) as HTMLImageElement
-    expect(img).not.toBeNull()
-    expect(img.src).toMatch(/^data:image\/svg\+xml;base64,/)
+    expect(mountAsync).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      'graph TD; A-->B;',
+      expect.objectContaining({ zoom: false }),
+    )
+    expect(
+      mountEl.querySelector('.insights-mermaid .yohaku-pele svg'),
+    ).not.toBeNull()
+    expect(mountEl.querySelector('pre.insights-pre')).toBeNull()
   })
 
-  it('uses the dark palette when the host is dark', async () => {
-    await act(async () => {
-      root.render(
-        <HostProvider host={{ ...host, theme: 'dark' }}>
-          <InsightsMermaid content="graph TD; A-->B;" />
-        </HostProvider>,
-      )
-    })
-
-    expect(renderMermaidSVG).toHaveBeenCalledWith('graph TD; A-->B;', {
-      bg: '#171717',
-      fg: '#fafafa',
-    })
-  })
-
-  it('opens a rasterized png preview instead of the svg data URL', async () => {
+  it('opens a snapshot in the native viewer on tap', async () => {
     const openImage = vi.fn()
+    vi.spyOn(HTMLImageElement.prototype, 'decode').mockResolvedValue()
     await act(async () => {
       root.render(
         <HostProvider host={{ ...host, openImage }}>
-          <InsightsMermaid content="graph TD; A-->B;" />
+          {mermaidFence('graph TD; A-->B;')}
         </HostProvider>,
       )
     })
 
-    const img = mountEl.querySelector(
-      'img[alt="Mermaid diagram"]',
-    ) as HTMLImageElement
-    Object.defineProperty(img, 'naturalWidth', { value: 80 })
-    Object.defineProperty(img, 'naturalHeight', { value: 40 })
-
     await act(async () => {
-      img.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      mountEl
+        .querySelector('.yohaku-pele svg')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
     expect(openImage).toHaveBeenCalledTimes(1)
     const payload = openImage.mock.calls[0]?.[0] as {
       images: string[]
-      source?: { currentSrc: string }
       src: string
     }
-    expect(payload.src).toBe(PNG)
-    expect(payload.images).toEqual([PNG])
-    expect(payload.source?.currentSrc).toBe(PNG)
+    expect(payload.src).toMatch(/^data:image\//)
+    expect(payload.images).toEqual([payload.src])
   })
 
-  it('shows a local error when beautiful-mermaid throws', async () => {
-    renderMermaidSVG.mockImplementationOnce(() => {
-      throw new Error('bad fence')
-    })
+  it('shows the Pele error and the source text', async () => {
     await act(async () => {
       root.render(
-        <HostProvider host={host}>
-          <InsightsMermaid content="not mermaid" />
-        </HostProvider>,
+        <HostProvider host={host}>{mermaidFence('not mermaid')}</HostProvider>,
       )
     })
 
-    expect(mountEl.querySelector('img')).toBeNull()
-    expect(mountEl.textContent).toContain('bad fence')
-  })
-})
-
-describe('InsightsPre', () => {
-  let mountEl: HTMLDivElement
-  let root: Root
-
-  beforeEach(() => {
-    renderMermaidSVG.mockClear()
-    mountEl = document.createElement('div')
-    document.body.append(mountEl)
-    root = createRoot(mountEl)
-  })
-
-  afterEach(() => {
-    act(() => root.unmount())
-    mountEl.remove()
-  })
-
-  it('renders InsightsMermaid for a mermaid fence', async () => {
-    await act(async () => {
-      root.render(
-        <HostProvider host={host}>
-          <InsightsPre>
-            <code className="language-mermaid">{'graph TD; A-->B;'}</code>
-          </InsightsPre>
-        </HostProvider>,
-      )
-    })
-
-    expect(mountEl.querySelector('.insights-mermaid img[alt="Mermaid diagram"]')).not.toBeNull()
-    expect(mountEl.querySelector('pre.insights-pre')).toBeNull()
+    expect(mountEl.querySelector('[role="alert"]')?.textContent).toContain(
+      'bad fence',
+    )
+    expect(mountEl.textContent).toContain('not mermaid')
   })
 
   it('keeps a plain pre for non-mermaid fences', async () => {
@@ -178,6 +126,6 @@ describe('InsightsPre', () => {
     })
 
     expect(mountEl.querySelector('pre.insights-pre')).not.toBeNull()
-    expect(renderMermaidSVG).not.toHaveBeenCalled()
+    expect(mountAsync).not.toHaveBeenCalled()
   })
 })

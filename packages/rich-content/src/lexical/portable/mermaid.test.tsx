@@ -1,19 +1,18 @@
-import { act, type ReactNode } from 'react'
+import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { type HostCapabilities, HostProvider } from '../../host'
 import { Mermaid } from './mermaid'
 
-vi.mock('@haklex/rich-compose/modules/mermaid', () => ({
-  MermaidRenderer: () => (
-    <img alt="Mermaid diagram" src="data:image/svg+xml,<svg></svg>" />
-  ),
-}))
+const mountAsync = vi.hoisted(() =>
+  vi.fn(async (element: HTMLElement) => {
+    element.innerHTML = '<svg viewBox="0 0 80 40"></svg>'
+    return { destroy: vi.fn(), update: vi.fn() }
+  }),
+)
 
-vi.mock('@haklex/rich-editor', () => ({
-  ColorSchemeProvider: ({ children }: { children: ReactNode }) => children,
-}))
+vi.mock('pele/lazy', () => ({ mountAsync }))
 
 const PNG = 'data:image/png;base64,QQ=='
 
@@ -34,11 +33,12 @@ const host: HostCapabilities = {
   webOrigin: 'https://example.com',
 }
 
-describe('Mermaid diagramPreview', () => {
+describe('Mermaid (Pele)', () => {
   let mountEl: HTMLDivElement
   let root: Root
 
   beforeEach(() => {
+    mountAsync.mockClear()
     mountEl = document.createElement('div')
     document.body.append(mountEl)
     root = createRoot(mountEl)
@@ -54,8 +54,33 @@ describe('Mermaid diagramPreview', () => {
     vi.restoreAllMocks()
   })
 
-  it('opens a rasterized png preview instead of the svg data URL', async () => {
+  it('zooms in place when the host has no image viewer', async () => {
+    await act(async () => {
+      root.render(
+        <HostProvider host={{ ...host, diagramPreview: 'zoom' }}>
+          <Mermaid content="graph TD; A-->B;" />
+        </HostProvider>,
+      )
+    })
+
+    expect(mountAsync).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      'graph TD; A-->B;',
+      expect.objectContaining({ zoom: 'auto' }),
+    )
+  })
+
+  it('opens a rasterized png preview in the host viewer', async () => {
     const openImage = vi.fn()
+    vi.spyOn(HTMLImageElement.prototype, 'decode').mockResolvedValue()
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(
+      80,
+    )
+    vi.spyOn(
+      HTMLImageElement.prototype,
+      'naturalHeight',
+      'get',
+    ).mockReturnValue(40)
     await act(async () => {
       root.render(
         <HostProvider host={{ ...host, openImage }}>
@@ -64,14 +89,16 @@ describe('Mermaid diagramPreview', () => {
       )
     })
 
-    const img = mountEl.querySelector(
-      'img[alt="Mermaid diagram"]',
-    ) as HTMLImageElement
-    Object.defineProperty(img, 'naturalWidth', { value: 80 })
-    Object.defineProperty(img, 'naturalHeight', { value: 40 })
+    expect(mountAsync).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      'graph TD; A-->B;',
+      expect.objectContaining({ zoom: false }),
+    )
 
     await act(async () => {
-      img.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      mountEl
+        .querySelector('.yohaku-pele svg')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
     expect(openImage).toHaveBeenCalledTimes(1)

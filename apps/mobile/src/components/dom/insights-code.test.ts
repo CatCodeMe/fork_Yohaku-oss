@@ -10,7 +10,8 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 const INSIGHTS_SOURCES = [
   'insights-code.tsx',
-  'insights-mermaid.tsx',
+  // The Pele renderer insights-code mounts for mermaid fences.
+  '../../../../../packages/rich-content/src/diagram/pele-diagram.tsx',
   'insights-body.tsx',
   'webview-host.ts',
 ] as const
@@ -32,7 +33,7 @@ describe('insights import graph', () => {
       expect(src).not.toMatch(/@haklex\/rich-editor/)
       expect(src).not.toMatch(/portable\/mermaid/)
       expect(src).not.toMatch(/@haklex\/rich-compose\/style\/mermaid/)
-      expect(src).not.toMatch(/from ['"]\.\/code-block['"]/)
+      expect(src).not.toMatch(/from ["']\.\/code-block["']/)
       expect(src).not.toMatch(/shiki-highlighter/)
     },
   )

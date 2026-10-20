@@ -1,0 +1,99 @@
+/* Pele diagrams on the design tokens (web and the mobile WebView). The neutral scale and accent invert in
+   dark mode on their own, so diagrams follow the theme without re-rendering.
+   Variable list: https://pele.run/theming */
+.yohaku-pele {
+  --pele-bg: transparent;
+  --pele-fg: var(--color-neutral-9);
+  --pele-muted: var(--color-neutral-7);
+  --pele-line: var(--color-neutral-6);
+  --pele-surface: var(--surface-paper, var(--color-neutral-1));
+  --pele-surface-alt: var(--color-neutral-2);
+  --pele-border: var(--color-neutral-4);
+  --pele-accent: var(--color-accent);
+  --pele-font: var(--font-sans);
+  --pele-radius: 8px;
+  --pele-series-1: var(--color-accent);
+  --pele-series-2: var(--color-info, #3b82f6);
+  --pele-series-3: var(--color-success, #22c55e);
+  --pele-series-4: var(--color-warning, #f59e0b);
+  --pele-series-5: var(--color-error, #ef4444);
+  --pele-series-6: color-mix(
+    in oklab,
+    var(--color-accent) 55%,
+    var(--color-neutral-6)
+  );
+  --pele-series-7: var(--color-neutral-7);
+  --pele-series-8: var(--color-neutral-5);
+
+  position: relative;
+  box-sizing: border-box;
+  margin: 1.5rem 0;
+  border: 1px solid rgb(0 0 0 / 0.04);
+  border-radius: 0.75rem;
+  background: var(--surface-paper, var(--color-neutral-1));
+  padding: 1rem;
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 0.01),
+    0 3px 10px rgb(0 0 0 / 0.02);
+}
+
+:where(.dark, [data-theme='dark']) .yohaku-pele {
+  border-color: rgb(255 255 255 / 0.06);
+}
+
+.yohaku-pele-canvas {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.yohaku-pele-canvas svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.yohaku-pele-placeholder {
+  display: flex;
+  min-height: 8rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.yohaku-pele-placeholder::after {
+  content: '';
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-neutral-4);
+  border-top-color: var(--color-neutral-6);
+  border-radius: 50%;
+  animation: yohaku-pele-spin 0.8s linear infinite;
+}
+
+@keyframes yohaku-pele-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.yohaku-pele-error {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.yohaku-pele-error pre {
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.yohaku-pele-error-message {
+  color: var(--color-neutral-8);
+}
+
+.yohaku-pele-error-source {
+  color: var(--color-neutral-7);
+}

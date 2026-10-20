@@ -15,7 +15,6 @@ import {
   type OnImageClick,
 } from '@haklex/rich-compose/modules/image'
 import { mentionModule } from '@haklex/rich-compose/modules/mention'
-import { mermaidModule } from '@haklex/rich-compose/modules/mermaid'
 import {
   nestedDocModule,
   type OnNestedDocExpand,
@@ -56,6 +55,7 @@ import {
   configuredDynamicModule,
   setDynamicCatalogHost,
 } from './dynamic-catalog'
+import { yohakuFileModule } from './file-module'
 import {
   CodeBlockOverride,
   lexicalAutolinkOverride,
@@ -70,7 +70,6 @@ import { LexicalDetailsOverride } from './overrides/details'
 import { lexicalHeadingOverride } from './overrides/heading'
 import { LexicalListItemOverride } from './overrides/list-item'
 import { lexicalTableOverrides } from './overrides/table'
-import { yohakuFileModule } from './file-module'
 import { yohakuChatModule } from './portable/chat-module'
 import { staticExcalidrawModule } from './portable/excalidraw'
 import { LexicalImageOverride } from './portable/image'
@@ -202,7 +201,6 @@ const modules: RichRendererModule[] = [
   rubyModule,
   videoModule,
   yohakuFileModule,
-  mermaidModule,
   boundedPollModule,
   boundedMapModule,
   boundedAfilmoryModule,
@@ -216,6 +214,7 @@ const RichContent = composeRenderer({
   modules,
   overrides: {
     Image: LexicalImageOverride,
+    // Pele replaces haklex's beautiful-mermaid renderer (no mermaidModule).
     Mermaid: withBoundary('图表', Mermaid),
     [NESTED_DOC_NODE_KEY]: LexicalNestedDocOverride,
   },

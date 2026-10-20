@@ -1,6 +1,5 @@
+import { PeleDiagram } from '@yohaku/rich-content/src/diagram/pele-diagram.tsx'
 import { isValidElement, type ReactNode } from 'react'
-
-import { InsightsMermaid } from './insights-mermaid'
 
 export function fenceLang(className: unknown): string | undefined {
   const match = /(?:language-|lang-)(\w+)/.exec(String(className ?? ''))
@@ -23,7 +22,7 @@ export function InsightsPre({ children }: { children?: ReactNode }) {
     if (lang === 'mermaid') {
       return (
         <div className="insights-mermaid">
-          <InsightsMermaid content={text} />
+          <PeleDiagram content={text} />
         </div>
       )
     }
