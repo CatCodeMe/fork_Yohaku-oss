@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { CodeLanguageMark, CodeShell } from './code-shell'
+import { useHighlightedCode } from './use-highlighted-code'
 
 export interface CodeSnippetFile {
   code: string
@@ -10,29 +11,13 @@ export interface CodeSnippetFile {
   language?: string
 }
 
-function useHighlightedHtml(code: string, language?: string): string | null {
-  const [html, setHtml] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    setHtml(null)
-    import('./code-highlighter')
-      .then(({ highlightToHtml }) => {
-        if (!cancelled) setHtml(highlightToHtml(code, language))
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [code, language])
-
-  return html
-}
-
 export function YohakuCodeSnippet({ files }: { files: CodeSnippetFile[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const active = files[activeIndex] ?? files[0]
-  const html = useHighlightedHtml(active?.code ?? '', active?.language)
+  const { code, html } = useHighlightedCode(
+    active?.code ?? '',
+    active?.language,
+  )
 
   if (!active) return null
 
@@ -58,7 +43,7 @@ export function YohakuCodeSnippet({ files }: { files: CodeSnippetFile[] }) {
 
   return (
     <CodeShell
-      code={active.code}
+      code={code}
       footerName={active.filename}
       header={tabs}
       language={active.language}
@@ -67,7 +52,7 @@ export function YohakuCodeSnippet({ files }: { files: CodeSnippetFile[] }) {
         <div dangerouslySetInnerHTML={{ __html: html }} />
       ) : (
         <pre>
-          <code>{active.code}</code>
+          <code>{code}</code>
         </pre>
       )}
     </CodeShell>

@@ -1,38 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
 import { CodeShell } from './code-shell'
-
-function useHighlightedHtml(code: string, language?: string): string | null {
-  const [html, setHtml] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    setHtml(null)
-    import('./code-highlighter')
-      .then(({ highlightToHtml }) => {
-        if (!cancelled) setHtml(highlightToHtml(code, language))
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [code, language])
-
-  return html
-}
+import { useHighlightedCode } from './use-highlighted-code'
 
 export function PortableCodeBlock({
-  code,
+  code: source,
   fold = true,
   language,
+  meta,
 }: {
   code: string
   fold?: boolean
   language?: string
+  meta?: string
 }) {
-  const html = useHighlightedHtml(code, language)
+  const { code, html } = useHighlightedCode(source, language, meta)
 
   return (
     <CodeShell code={code} fold={fold} language={language}>
