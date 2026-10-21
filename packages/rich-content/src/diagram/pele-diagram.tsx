@@ -18,7 +18,10 @@ const PELE_VARS = [
   '--pele-surface-alt',
   '--pele-border',
   '--pele-accent',
+  '--pele-critical',
+  '--pele-error',
   '--pele-font',
+  '--pele-font-mono',
   '--pele-radius',
   ...Array.from({ length: 8 }, (_, index) => `--pele-series-${index + 1}`),
 ]

@@ -10,7 +10,10 @@
   --pele-surface-alt: var(--color-neutral-2);
   --pele-border: var(--color-neutral-4);
   --pele-accent: var(--color-accent);
+  --pele-critical: var(--color-error, #e45756);
+  --pele-error: var(--color-error, #e45756);
   --pele-font: var(--font-sans);
+  --pele-font-mono: var(--font-mono);
   --pele-radius: 8px;
   --pele-series-1: var(--color-accent);
   --pele-series-2: var(--color-info, #3b82f6);
