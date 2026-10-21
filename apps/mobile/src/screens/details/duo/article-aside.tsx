@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -9,7 +10,11 @@ import {
   readingMinutesLeft,
   readingProgress,
 } from '@/lib/article-reading-position'
-import { emitTocJump, tocHeadingOffset } from '@/lib/article-toc'
+import {
+  emitTocJump,
+  subscribeTocOffsets,
+  tocHeadingOffset,
+} from '@/lib/article-toc'
 import type { LexicalHeading } from '@/lib/lexical-headings'
 import { usePalette } from '@/theme/palette'
 
@@ -106,12 +111,23 @@ function TocRail({
   reading: ReadingStore
 }) {
   const palette = usePalette()
-  const active = useReadingValue(reading, (metrics) =>
-    activeHeadingIndex(
-      headings.map((heading) => tocHeadingOffset(heading.blockId)),
-      metrics.y,
-      metrics.viewportHeight,
-    ),
+  const active = useSyncExternalStore(
+    (listener) => {
+      const stopReading = reading.subscribe(listener)
+      const stopOffsets = subscribeTocOffsets(listener)
+      return () => {
+        stopReading()
+        stopOffsets()
+      }
+    },
+    () => {
+      const metrics = reading.get()
+      return activeHeadingIndex(
+        headings.map((heading) => tocHeadingOffset(heading.blockId)),
+        metrics.y,
+        metrics.viewportHeight,
+      )
+    },
   )
   const minLevel = headings.reduce(
     (lowest, heading) => Math.min(lowest, heading.level),

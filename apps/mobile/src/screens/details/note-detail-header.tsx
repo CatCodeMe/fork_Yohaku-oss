@@ -4,10 +4,11 @@ import type { ArticleAiGenValue } from '@/api/article-meta'
 import { AppText } from '@/components/ui'
 
 import { ArticleMetaLine } from './article-meta-line'
-import { NoteCoverBleed } from './note-cover-bleed'
+import { type ColumnBleed, NoteCoverBleed } from './note-cover-bleed'
 
 export function NoteDetailHeader({
   aiGen,
+  columnBleed,
   hasCover,
   headerHeight,
   heroHeight,
@@ -17,6 +18,7 @@ export function NoteDetailHeader({
   title,
 }: {
   aiGen?: ArticleAiGenValue[] | null
+  columnBleed?: ColumnBleed
   hasCover: boolean
   headerHeight: number
   heroHeight: number
@@ -42,7 +44,9 @@ export function NoteDetailHeader({
   }
   return (
     <>
-      {hasCover ? <NoteCoverBleed headerHeight={headerHeight} /> : null}
+      {hasCover ? (
+        <NoteCoverBleed columnBleed={columnBleed} headerHeight={headerHeight} />
+      ) : null}
       <View style={styles.header} onLayout={onLayout}>
         <AppText variant="largeTitle">{title}</AppText>
         <ArticleMetaLine aiGen={aiGen} parts={metaParts} />

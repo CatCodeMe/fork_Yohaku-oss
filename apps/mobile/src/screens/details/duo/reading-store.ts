@@ -42,6 +42,13 @@ export function useDuoArticle(
   return {
     asideShown: layout !== undefined && layout.mode !== 'single',
     bodyWidth: layout?.bodyWidth,
+    columnBleed:
+      layout && layout.mode !== 'book'
+        ? {
+            left: layout.contentLeft - layout.bodyLeft,
+            width: layout.bodyWidth,
+          }
+        : undefined,
     onScrollMetrics: isDuo
       ? (metrics: ScrollMetrics) => {
           onScrollMetrics?.(metrics)

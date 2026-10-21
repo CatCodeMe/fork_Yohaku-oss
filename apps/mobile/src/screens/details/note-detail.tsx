@@ -331,6 +331,7 @@ export function NoteDetailScreen({
                   >
                     <NoteDetailHeader
                       aiGen={note.articleMeta?.aiGen}
+                      columnBleed={duo.columnBleed}
                       hasCover={Boolean(coverUrl)}
                       headerHeight={headerHeight}
                       heroHeight={heroHeight}
