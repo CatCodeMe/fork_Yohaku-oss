@@ -6,6 +6,7 @@ import type { ScrollViewInstance } from 'react-native'
 import { Dimensions, StyleSheet, View } from 'react-native'
 
 import { api } from '@/api/client'
+import { duoArticleColumn } from '@/components/navigation/duo/readable'
 import { EdgeEffectScrollView } from '@/components/navigation/edge-effect-scroll-view'
 import { AppText } from '@/components/ui'
 import { useLocale, useTranslations } from '@/i18n'
@@ -80,7 +81,7 @@ export function PageDetailScreen({ slug }: { slug: string }) {
 
   const scroll = (children: ReactNode, bottomInset?: number) => (
     <EdgeEffectScrollView
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, duoArticleColumn]}
       contentInset={bottomInset ? { bottom: bottomInset } : undefined}
       headerTitleProgress={headerTitleProgress}
       ref={scrollRef}

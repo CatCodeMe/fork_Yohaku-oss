@@ -7,6 +7,7 @@ import { StyleSheet, View } from 'react-native'
 import { translatedBodyNeedsRefresh } from '@/api/article-meta'
 import { api } from '@/api/client'
 import { useSession } from '@/auth/session-store'
+import { duoArticleColumn } from '@/components/navigation/duo/readable'
 import { EdgeEffectScrollView } from '@/components/navigation/edge-effect-scroll-view'
 import { AppText, NativePressable } from '@/components/ui'
 import { db } from '@/db'
@@ -295,6 +296,7 @@ export function PostDetailScreen({
                 ref={scrollRef}
                 contentContainerStyle={[
                   styles.content,
+                  duoArticleColumn,
                   tts.isNarrating && !compose.composing
                     ? styles.narratingPad
                     : null,
@@ -448,7 +450,7 @@ export function PostDetailScreen({
         </CommentComposeHost>
       ) : (
         <EdgeEffectScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, duoArticleColumn]}
           headerTitleProgress={headerTitleProgress}
           ref={scrollRef}
           style={[styles.screen, { backgroundColor: palette.surface.desk }]}

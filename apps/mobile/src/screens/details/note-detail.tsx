@@ -12,6 +12,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native'
 
 import { translatedBodyNeedsRefresh } from '@/api/article-meta'
 import { api } from '@/api/client'
+import { duoArticleColumn } from '@/components/navigation/duo/readable'
 import { EdgeEffectScrollView } from '@/components/navigation/edge-effect-scroll-view'
 import { AppText } from '@/components/ui'
 import { db } from '@/db'
@@ -288,6 +289,7 @@ export function NoteDetailScreen({
                 style={[styles.screen, styles.scrollClear]}
                 contentContainerStyle={[
                   styles.content,
+                  duoArticleColumn,
                   coverUrl ? styles.contentWithCover : null,
                   tts.isNarrating && !compose.composing
                     ? styles.narratingPad
@@ -456,7 +458,7 @@ export function NoteDetailScreen({
         </CommentComposeHost>
       ) : (
         <EdgeEffectScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, duoArticleColumn]}
           headerTitleProgress={headerTitleProgress}
           ref={scrollRef}
           style={[styles.screen, { backgroundColor: palette.surface.desk }]}
