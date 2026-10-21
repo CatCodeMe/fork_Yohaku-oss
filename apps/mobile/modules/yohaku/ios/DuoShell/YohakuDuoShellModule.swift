@@ -87,17 +87,43 @@ public class YohakuDuoShellModule: Module {
 
     View(DuoReadableView.self) {
       ViewName("DuoReadable")
-      Events("onPosture")
-      Prop("startAngle") { (view: DuoReadableView, value: Double) in
-        view.setStartAngle(value)
-      }
-      Prop("columnMaxWidth") { (view: DuoReadableView, value: Double) in
+      Events("onColumnFrame")
+      Prop("columnMaxWidth") { (view: DuoReadableView, value: Double?) in
         view.setMaxWidth(value)
       }
     }
 
     View(DuoColumnView.self) {
       ViewName("DuoColumn")
+    }
+
+    View(DuoArticleFrameView.self) {
+      ViewName("DuoArticleFrame")
+      Events("onLayoutMode")
+
+      Prop("asideAvailable") { (view: DuoArticleFrameView, value: Bool) in
+        view.asideAvailable = value
+      }
+    }
+
+    View(DuoArticleSlotView.self) {
+      ViewName("DuoArticleSlot")
+
+      Prop("crossfades") { (view: DuoArticleSlotView, value: Bool?) in
+        view.crossfades = value ?? false
+      }
+    }
+
+    View(DuoArrangementView.self) {
+      ViewName("DuoArrangement")
+    }
+
+    View(DuoPaneView.self) {
+      ViewName("DuoPane")
+
+      Prop("placement") { (view: DuoPaneView, value: String) in
+        view.placement = value
+      }
     }
   }
 }

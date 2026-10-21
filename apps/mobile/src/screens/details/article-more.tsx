@@ -188,7 +188,9 @@ function DuoArticleMore({
     {
       id: 'article-more',
       label,
-      menu: items.map((item) => ({
+      menu: items
+        .filter((item) => !item.hidden)
+        .map((item) => ({
         group: item.category,
         id: item.id,
         onPress: () => onAction(item.id),

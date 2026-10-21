@@ -2,16 +2,6 @@ import { requireNativeModule, requireNativeViewManager } from 'expo-modules-core
 import type { ComponentType } from 'react'
 import type { NativeSyntheticEvent, ViewProps } from 'react-native'
 
-export type DuoPosture = {
-  angle: number
-  divisionMaxX?: number
-  divisionMinX?: number
-  safeLeft: number
-  safeRight: number
-  status: 'closed' | 'fullyOpen' | 'none' | 'partiallyOpen' | 'unknown'
-  width: number
-}
-
 export type DuoBarItem = {
   id: string
   label: string
@@ -78,13 +68,42 @@ export const NativeDuoScreen: ComponentType<
   }
 > = requireNativeViewManager('YohakuDuoShell', 'DuoScreen')
 
+export type DuoColumnFrame = { left: number; width: number }
+
 export const NativeDuoReadable: ComponentType<
   ViewProps & {
-    columnMaxWidth: number
-    onPosture?: (event: NativeSyntheticEvent<DuoPosture>) => void
-    startAngle?: number
+    columnMaxWidth?: number
+    onColumnFrame?: (event: NativeSyntheticEvent<DuoColumnFrame>) => void
   }
 > = requireNativeViewManager('YohakuDuoShell', 'DuoReadable')
 
 export const NativeDuoColumn: ComponentType<ViewProps> =
   requireNativeViewManager('YohakuDuoShell', 'DuoColumn')
+
+export const NativeDuoArrangement: ComponentType<ViewProps> =
+  requireNativeViewManager('YohakuDuoShell', 'DuoArrangement')
+
+export const NativeDuoPane: ComponentType<
+  ViewProps & { placement: 'primary' | 'secondary' }
+> = requireNativeViewManager('YohakuDuoShell', 'DuoPane')
+
+export type DuoArticleLayoutMode = {
+  asideLeft: number
+  asideWidth: number
+  bodyLeft: number
+  bodyWidth: number
+  contentLeft: number
+  contentWidth: number
+  mode: 'book' | 'flat' | 'single'
+}
+
+export const NativeDuoArticleFrame: ComponentType<
+  ViewProps & {
+    asideAvailable: boolean
+    onLayoutMode?: (event: NativeSyntheticEvent<DuoArticleLayoutMode>) => void
+  }
+> = requireNativeViewManager('YohakuDuoShell', 'DuoArticleFrame')
+
+export const NativeDuoArticleSlot: ComponentType<
+  ViewProps & { crossfades?: boolean }
+> = requireNativeViewManager('YohakuDuoShell', 'DuoArticleSlot')

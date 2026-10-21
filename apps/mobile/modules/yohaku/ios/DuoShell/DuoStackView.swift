@@ -15,7 +15,7 @@ struct DuoBarItem: Record {
   @Field var menu: [DuoBarMenuAction] = []
 }
 
-final class DuoScreenView: ExpoView {
+final class DuoScreenView: DuoSizedView {
   let onBarItem = EventDispatcher()
   var routeKey = ""
   var presentation = "push"
@@ -26,6 +26,11 @@ final class DuoScreenView: ExpoView {
   var largestUndimmedDetentIndex: Int?
 
   var isModal: Bool { presentation != "push" }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    if let container = superview?.bounds.size { fitYoga(to: container) }
+  }
 
   private(set) lazy var controller: DuoHostedController = {
     let controller = DuoHostedController(hosting: self)

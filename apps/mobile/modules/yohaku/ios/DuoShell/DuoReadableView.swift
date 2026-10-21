@@ -1,53 +1,65 @@
 import ExpoModulesCore
 import UIKit
 
-final class DuoColumnView: ExpoView {
-  private var appliedWidth: CGFloat = -1
+// Positions come from Yoga so Pressable hit regions match the screen; the glide
+// only animates the jump Yoga already made, from the old spot to the new one.
+class DuoColumnView: ExpoView {
+  var crossfades = false
+  private var glideDeadline: Date?
+  private var resting: (minX: CGFloat, width: CGFloat)?
 
-  func applyWidth(_ width: CGFloat) {
-    guard abs(width - appliedWidth) >= 0.5 else { return }
-    appliedWidth = width
-    setStyleSize(NSNumber(value: Double(width)), height: nil)
+  func glideNextMove() {
+    glideDeadline = Date().addingTimeInterval(0.6)
+  }
+
+  override var center: CGPoint {
+    didSet { setNeedsLayout() }
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    let now = (minX: center.x - bounds.width / 2, width: bounds.width)
+    defer { resting = now }
+    guard let previous = resting, let deadline = glideDeadline, deadline > Date(),
+      abs(previous.minX - now.minX) > 0.5 || abs(previous.width - now.width) > 0.5
+    else { return }
+    glideDeadline = nil
+    if crossfades {
+      alpha = 0
+      UIView.animate(
+        springDuration: 0.3, bounce: 0, initialSpringVelocity: 0, delay: 0.3, options: []
+      ) { self.alpha = 1 }
+      return
+    }
+    transform = CGAffineTransform(translationX: previous.minX - now.minX, y: 0)
+    UIView.animate(springDuration: 0.45, bounce: 0) { self.transform = .identity }
   }
 }
 
-final class DuoReadableView: ExpoView {
-  let onPosture = EventDispatcher()
+final class DuoReadableView: DuoHingeView {
+  let onColumnFrame = EventDispatcher()
+  private let clip = UIView()
   private let slider = UIView()
-  private var status = "unknown"
-  private var angle: CGFloat = 180
-  private var startAngle: CGFloat = 85
-  // A continuous drag tops out near 174.7° before the hinge jumps to fullyOpen at 180°.
-  private let flatAngle: CGFloat = 175
-  private var activationAngle: CGFloat?
-  private var wasInner = false
-  private var maxWidth: CGFloat = 600
-  private var lastReport: [String: AnyHashable] = [:]
+  private var maxWidth = CGFloat.greatestFiniteMagnitude
+  private var lastFrame: (left: CGFloat, width: CGFloat)?
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
-    addSubview(slider)
-    if #available(iOS 27.1, *) {
-      addInteraction(
-        UIHingeInteraction { [weak self] _, update in
-          self?.hingeChanged(update.hinge)
-        })
-    }
+    // A widening column glides in from where the narrow one sat, so it can reach
+    // past the trailing status column mid-slide unless it is clipped.
+    clip.clipsToBounds = true
+    clip.addSubview(slider)
+    addSubview(clip)
   }
 
-  func setStartAngle(_ value: Double) {
-    startAngle = CGFloat(value)
-    applyFrame()
-  }
-
-  func setMaxWidth(_ value: Double) {
-    maxWidth = CGFloat(value)
-    applyFrame()
+  func setMaxWidth(_ value: Double?) {
+    maxWidth = value.map { CGFloat($0) } ?? .greatestFiniteMagnitude
+    report()
   }
 
   override func mountChildComponentView(_ childComponentView: UIView, index: Int) {
     slider.insertSubview(childComponentView, at: index)
-    applyFrame()
+    report()
   }
 
   override func unmountChildComponentView(_ childComponentView: UIView, index: Int) {
@@ -56,96 +68,45 @@ final class DuoReadableView: ExpoView {
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    slider.bounds = bounds
-    slider.center = CGPoint(x: bounds.midX, y: bounds.midY)
-    trackActivation()
+    clip.frame = CGRect(
+      x: safeAreaInsets.left, y: 0,
+      width: max(0, bounds.width - safeAreaInsets.left - safeAreaInsets.right),
+      height: bounds.height)
+    slider.frame = CGRect(
+      x: -safeAreaInsets.left, y: 0, width: bounds.width, height: bounds.height)
     report()
-    applyFrame()
   }
 
   override func safeAreaInsetsDidChange() {
     super.safeAreaInsetsDidChange()
-    report()
-    applyFrame()
+    setNeedsLayout()
   }
 
-  @available(iOS 27.1, *)
-  private func hingeChanged(_ hinge: UIHinge?) {
-    guard let hinge else {
-      status = "none"
-      report()
-      return
+  override func dockingDidChange() {
+    for case let column as DuoColumnView in slider.subviews {
+      column.glideNextMove()
     }
-    switch hinge.status {
-    case .closed: status = "closed"
-    case .partiallyOpen: status = "partiallyOpen"
-    case .fullyOpen: status = "fullyOpen"
-    default: status = "unknown"
-    }
-    angle = hinge.angle * 180 / .pi
-    trackActivation()
     report()
-    applyFrame()
-  }
-
-  private func division() -> CGRect? {
-    guard #available(iOS 27.1, *) else { return nil }
-    return reservedRegions(kind: .division).first(where: \.isActive)?.frame
-  }
-
-  private func hingeDivision() -> CGRect? {
-    guard #available(iOS 27.1, *) else { return nil }
-    return reservedRegions(kind: .division, options: .includeInactive)
-      .map(\.frame)
-      .first { $0.minX > bounds.minX && $0.maxX < bounds.maxX }
-  }
-
-  private func trackActivation() {
-    let inner = hingeDivision() != nil
-    defer { wasInner = inner }
-    guard inner, !wasInner, status != "fullyOpen", angle < 180 else { return }
-    activationAngle = min(flatAngle - 1, angle)
   }
 
   private func targetFrame() -> (left: CGFloat, width: CGFloat) {
     let safeMinX = safeAreaInsets.left
     let safeMaxX = bounds.width - safeAreaInsets.right
     let safeWidth = max(0, safeMaxX - safeMinX)
-    let centeredWidth = min(maxWidth, safeWidth)
-    let centered = (left: safeMinX + (safeWidth - centeredWidth) / 2, width: centeredWidth)
-    guard status != "fullyOpen", let division = hingeDivision() else { return centered }
-    let right = (left: division.maxX, width: max(0, safeMaxX - division.maxX))
-    let from = activationAngle ?? startAngle
-    let progress = min(1, max(0, (angle - from) / (flatAngle - from)))
-    return (
-      left: right.left + (centered.left - right.left) * progress,
-      width: right.width + (centered.width - right.width) * progress
-    )
-  }
-
-  private func applyFrame() {
-    guard bounds.width > 0 else { return }
-    let frame = targetFrame()
-    slider.transform = CGAffineTransform(translationX: frame.left, y: 0)
-    for case let column as DuoColumnView in slider.subviews {
-      column.applyWidth(frame.width)
+    let division = hingeDivision()
+    if let division { learnBookPage(division: division) }
+    let centeredWidth = columnWidth(fitting: safeWidth, maxWidth: maxWidth)
+    guard docked, let division, division.maxX < safeMaxX else {
+      return (left: safeMinX + (safeWidth - centeredWidth) / 2, width: centeredWidth)
     }
+    return (left: division.maxX, width: safeMaxX - division.maxX)
   }
 
   private func report() {
-    var payload: [String: AnyHashable] = [
-      "angle": Double(angle.rounded()),
-      "safeLeft": Double(safeAreaInsets.left),
-      "safeRight": Double(safeAreaInsets.right),
-      "status": status,
-      "width": Double(bounds.width),
-    ]
-    if let division = division() {
-      payload["divisionMinX"] = Double(division.minX)
-      payload["divisionMaxX"] = Double(division.maxX)
-    }
-    guard payload != lastReport, bounds.width > 0 else { return }
-    lastReport = payload
-    onPosture(payload)
+    guard bounds.width > 0, !holdsTransitionalLayout else { return }
+    let frame = targetFrame()
+    guard lastFrame.map({ $0 != frame }) ?? true else { return }
+    lastFrame = frame
+    onColumnFrame(["left": Double(frame.left), "width": Double(frame.width)])
   }
 }

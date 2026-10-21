@@ -3,7 +3,7 @@ import { NotesListScreen } from '@/screens/lists/notes-list'
 
 export default function NotesScreen() {
   return (
-    <DuoReadableFrame maxWidth={600}>
+    <DuoReadableFrame>
       <NotesListScreen />
     </DuoReadableFrame>
   )

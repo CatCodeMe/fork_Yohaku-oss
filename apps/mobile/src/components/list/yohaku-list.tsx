@@ -14,6 +14,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScrollViewMarker } from 'react-native-screens/experimental'
 
+import { useInDuoReadable } from '@/components/navigation/duo/readable'
 import { pageScrollEdgeEffects } from '@/components/navigation/scroll-edges'
 
 import { listPrefetchWindow } from './list-prefetch-window'
@@ -24,8 +25,9 @@ const duoReadableWidth = 560
 
 function useDuoSidePadding() {
   const insets = useSafeAreaInsets()
+  const inReadable = useInDuoReadable()
   const [width, setWidth] = useState(0)
-  const available = width - insets.left - insets.right
+  const available = inReadable ? width : width - insets.left - insets.right
   return {
     onLayout: isDuo
       ? (event: { nativeEvent: { layout: { width: number } } }) =>
