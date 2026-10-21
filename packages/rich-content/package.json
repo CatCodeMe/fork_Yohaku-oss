@@ -57,8 +57,7 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@shikijs/langs": "4.5.0",
-    "@shikijs/themes": "4.5.0",
+    "@pierre/highlights": "0.2.0",
     "@yohaku/design-system": "workspace:*",
     "clsx": "2.1.1",
     "exif-js": "2.3.0",
@@ -67,7 +66,6 @@
     "lumeo": "^0.1.1",
     "markdown-to-jsx": "npm:@innei/markdown-to-jsx-yet@7.7.7-11",
     "roughjs": "^4.6.6",
-    "shiki": "^4.5.0",
     "slot-text": "^0.3.4",
     "tailwind-merge": "3.7.0",
     "thumbhash": "0.1.1"

@@ -10,22 +10,15 @@ export interface CodeSnippetFile {
   language?: string
 }
 
-function useShikiHtml(code: string, language?: string): string | null {
+function useHighlightedHtml(code: string, language?: string): string | null {
   const [html, setHtml] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setHtml(null)
-    import('./shiki-highlighter')
-      .then(async ({ highlightToHtml }) => {
-        try {
-          return await highlightToHtml(code, language)
-        } catch {
-          return await highlightToHtml(code)
-        }
-      })
-      .then((out) => {
-        if (!cancelled) setHtml(out)
+    import('./code-highlighter')
+      .then(({ highlightToHtml }) => {
+        if (!cancelled) setHtml(highlightToHtml(code, language))
       })
       .catch(() => {})
     return () => {
@@ -39,7 +32,7 @@ function useShikiHtml(code: string, language?: string): string | null {
 export function YohakuCodeSnippet({ files }: { files: CodeSnippetFile[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const active = files[activeIndex] ?? files[0]
-  const html = useShikiHtml(active?.code ?? '', active?.language)
+  const html = useHighlightedHtml(active?.code ?? '', active?.language)
 
   if (!active) return null
 

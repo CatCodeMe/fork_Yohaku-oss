@@ -479,12 +479,9 @@ importers:
 
   packages/rich-content:
     dependencies:
-      '@shikijs/langs':
-        specifier: 4.5.0
-        version: 4.5.0
-      '@shikijs/themes':
-        specifier: 4.5.0
-        version: 4.5.0
+      '@pierre/highlights':
+        specifier: 0.2.0
+        version: 0.2.0
       '@yohaku/design-system':
         specifier: workspace:*
         version: link:../../design-system
@@ -509,9 +506,6 @@ importers:
       roughjs:
         specifier: ^4.6.6
         version: 4.6.6
-      shiki:
-        specifier: ^4.5.0
-        version: 4.5.0
       slot-text:
         specifier: ^0.3.4
         version: 0.3.4(react@19.3.1)
@@ -2861,6 +2855,9 @@ packages:
   '@parcel/watcher@2.5.1':
     resolution: {integrity: sha512-dfUnCxiN9H4ap84DvD2ubjw+3vUNpstxa0TneY/Paat8a3R4uQZDLSvWjmznAY/DoahqTHl9V46HF/Zs3F29pg==}
     engines: {node: '>= 10.0.0'}
+
+  '@pierre/highlights@0.2.0':
+    resolution: {integrity: sha512-hTpcOU1EzDAP4bYtEhxmMu2jwMvtkUydRUBUpWMSHTs3dw0IaC3Ld5ansMy18L0GE3b6Vfl2OGkLK+pWWpnBmw==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -10173,6 +10170,8 @@ snapshots:
       '@parcel/watcher-win32-arm64': 2.5.1
       '@parcel/watcher-win32-ia32': 2.5.1
       '@parcel/watcher-win32-x64': 2.5.1
+
+  '@pierre/highlights@0.2.0': {}
 
   '@pkgjs/parseargs@0.11.0':
     optional: true

@@ -566,14 +566,16 @@
   white-space: pre;
 }
 
-.yohaku-code .shiki,
-.yohaku-code .shiki span {
+.yohaku-code .highlights,
+.yohaku-code .highlights span {
   background-color: transparent !important;
 }
 
-.dark .yohaku-code .shiki,
-.dark .yohaku-code .shiki span {
-  color: var(--shiki-dark) !important;
+.dark .yohaku-code .highlights,
+.dark .yohaku-code .highlights span,
+[data-theme='dark'] .yohaku-code .highlights,
+[data-theme='dark'] .yohaku-code .highlights span {
+  color: var(--hls-dark) !important;
 }
 
 

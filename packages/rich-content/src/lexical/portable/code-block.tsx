@@ -4,22 +4,15 @@ import { useEffect, useState } from 'react'
 
 import { CodeShell } from './code-shell'
 
-function useShikiHtml(code: string, language?: string): string | null {
+function useHighlightedHtml(code: string, language?: string): string | null {
   const [html, setHtml] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setHtml(null)
-    import('./shiki-highlighter')
-      .then(async ({ highlightToHtml }) => {
-        try {
-          return await highlightToHtml(code, language)
-        } catch {
-          return await highlightToHtml(code)
-        }
-      })
-      .then((out) => {
-        if (!cancelled) setHtml(out)
+    import('./code-highlighter')
+      .then(({ highlightToHtml }) => {
+        if (!cancelled) setHtml(highlightToHtml(code, language))
       })
       .catch(() => {})
     return () => {
@@ -39,7 +32,7 @@ export function PortableCodeBlock({
   fold?: boolean
   language?: string
 }) {
-  const html = useShikiHtml(code, language)
+  const html = useHighlightedHtml(code, language)
 
   return (
     <CodeShell code={code} fold={fold} language={language}>
