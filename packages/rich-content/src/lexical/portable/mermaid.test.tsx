@@ -1,26 +1,18 @@
-import { act, type ReactNode } from 'react'
+import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { type HostCapabilities, HostProvider } from '../../host'
-import { PREVIEW_MAX_PIXEL } from '../../lib/rasterize-to-png'
 import { Mermaid } from './mermaid'
 
-const mermaidSvg =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 400" width="100%" height="100%"></svg>'
+const mountAsync = vi.hoisted(() =>
+  vi.fn(async (element: HTMLElement) => {
+    element.innerHTML = '<svg viewBox="0 0 80 40"></svg>'
+    return { destroy: vi.fn(), update: vi.fn() }
+  }),
+)
 
-vi.mock('@haklex/rich-compose/modules/mermaid', () => ({
-  MermaidRenderer: () => (
-    <img
-      alt="Mermaid diagram"
-      src={`data:image/svg+xml,${encodeURIComponent(mermaidSvg)}`}
-    />
-  ),
-}))
-
-vi.mock('@haklex/rich-editor', () => ({
-  ColorSchemeProvider: ({ children }: { children: ReactNode }) => children,
-}))
+vi.mock('pele/lazy', () => ({ mountAsync }))
 
 const PNG = 'data:image/png;base64,QQ=='
 
@@ -41,54 +33,54 @@ const host: HostCapabilities = {
   webOrigin: 'https://example.com',
 }
 
-describe('Mermaid diagramPreview', () => {
+describe('Mermaid (Pele)', () => {
   let mountEl: HTMLDivElement
   let root: Root
 
-  const canvases: Array<{ width: number; height: number }> = []
-
   beforeEach(() => {
+    mountAsync.mockClear()
     mountEl = document.createElement('div')
     document.body.append(mountEl)
     root = createRoot(mountEl)
-    canvases.length = 0
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
       drawImage: vi.fn(),
     })) as never
-    HTMLCanvasElement.prototype.toDataURL = vi.fn(function toDataURL(
-      this: HTMLCanvasElement,
-    ) {
-      canvases.push({ width: this.width, height: this.height })
-      return PNG
-    })
-    class FakeImage {
-      height = 0
-      naturalHeight = 80
-      naturalWidth = 80
-      onerror: (() => void) | null = null
-      onload: (() => void) | null = null
-      width = 0
-      set src(_value: string) {
-        queueMicrotask(() => this.onload?.())
-      }
-    }
-    vi.stubGlobal('Image', FakeImage)
-    Object.defineProperty(window, 'devicePixelRatio', {
-      configurable: true,
-      value: 3,
-    })
+    HTMLCanvasElement.prototype.toDataURL = vi.fn(() => PNG)
   })
 
   afterEach(() => {
     act(() => root.unmount())
     mountEl.remove()
-    vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 
-  async function renderMermaid(
-    openImage: HostCapabilities['openImage'] = vi.fn(),
-  ) {
+  it('zooms in place when the host has no image viewer', async () => {
+    await act(async () => {
+      root.render(
+        <HostProvider host={{ ...host, diagramPreview: 'zoom' }}>
+          <Mermaid content="graph TD; A-->B;" />
+        </HostProvider>,
+      )
+    })
+
+    expect(mountAsync).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      'graph TD; A-->B;',
+      expect.objectContaining({ zoom: 'auto' }),
+    )
+  })
+
+  it('opens a rasterized png preview in the host viewer', async () => {
+    const openImage = vi.fn()
+    vi.spyOn(HTMLImageElement.prototype, 'decode').mockResolvedValue()
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(
+      80,
+    )
+    vi.spyOn(
+      HTMLImageElement.prototype,
+      'naturalHeight',
+      'get',
+    ).mockReturnValue(40)
     await act(async () => {
       root.render(
         <HostProvider host={{ ...host, openImage }}>
@@ -96,35 +88,17 @@ describe('Mermaid diagramPreview', () => {
         </HostProvider>,
       )
     })
-    await act(async () => {
-      await Promise.resolve()
-      await Promise.resolve()
-    })
-    return mountEl.querySelector(
-      'img[alt="Mermaid diagram"]',
-    ) as HTMLImageElement
-  }
 
-  it('paints a high-res png into the img for openImage hosts', async () => {
-    const img = await renderMermaid()
-
-    expect(img.src).toBe(PNG)
-    expect(canvases).toEqual([
-      {
-        width: PREVIEW_MAX_PIXEL,
-        height: Math.round(PREVIEW_MAX_PIXEL / 5),
-      },
-    ])
-  })
-
-  it('opens the painted png without rasterizing again', async () => {
-    const openImage = vi.fn()
-    const img = await renderMermaid(openImage)
-    const rasterizeCount = canvases.length
+    expect(mountAsync).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      'graph TD; A-->B;',
+      expect.objectContaining({ zoom: false }),
+    )
 
     await act(async () => {
-      img.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-      await Promise.resolve()
+      mountEl
+        .querySelector('.yohaku-pele svg')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
     expect(openImage).toHaveBeenCalledTimes(1)
@@ -136,6 +110,5 @@ describe('Mermaid diagramPreview', () => {
     expect(payload.src).toBe(PNG)
     expect(payload.images).toEqual([PNG])
     expect(payload.source?.currentSrc).toBe(PNG)
-    expect(canvases).toHaveLength(rasterizeCount)
   })
 })

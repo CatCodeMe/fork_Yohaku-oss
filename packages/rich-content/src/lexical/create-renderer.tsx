@@ -15,7 +15,6 @@ import {
   type OnImageClick,
 } from '@haklex/rich-compose/modules/image'
 import { mentionModule } from '@haklex/rich-compose/modules/mention'
-import { mermaidModule } from '@haklex/rich-compose/modules/mermaid'
 import {
   nestedDocModule,
   type OnNestedDocExpand,
@@ -235,7 +234,6 @@ const modules: RichRendererModule[] = [
   rubyModule,
   withPrintRenderers('video', videoModule),
   yohakuFileModule,
-  mermaidModule,
   boundedPollModule,
   boundedMapModule,
   boundedAfilmoryModule,
@@ -250,6 +248,7 @@ const RichContent = composeRenderer({
   modules,
   overrides: {
     Image: LexicalImageOverride,
+    // Pele replaces haklex's beautiful-mermaid renderer (no mermaidModule).
     Mermaid: withBoundary('图表', Mermaid),
     Video: withPrintCaption('video', VideoRenderer),
     [NESTED_DOC_NODE_KEY]: LexicalNestedDocOverride,
