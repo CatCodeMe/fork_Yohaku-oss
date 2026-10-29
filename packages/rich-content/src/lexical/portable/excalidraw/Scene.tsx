@@ -130,7 +130,8 @@ const ElementGroup: FC<{ el: ExcalidrawElement; files?: BinaryFiles }> = ({
 }) => {
   const cx = el.x + el.width / 2
   const cy = el.y + el.height / 2
-  const angleDeg = (el.angle * 180) / Math.PI
+  // Hand-written scenes may omit `angle`; NaN would void the whole transform.
+  const angleDeg = ((Number.isFinite(el.angle) ? el.angle : 0) * 180) / Math.PI
   const transform = `translate(${el.x} ${el.y}) rotate(${angleDeg} ${el.width / 2} ${el.height / 2})`
 
   return (
@@ -216,9 +217,15 @@ const PathSet: FC<{
             <path
               d={set.d}
               fill={fillColor || 'none'}
-              fillRule="evenodd"
               key={i}
               stroke="none"
+              // Match roughjs: evenodd only for curves/polygons. A sketchy
+              // ellipse overlaps itself, and evenodd would hollow it out.
+              fillRule={
+                drawable.shape === 'curve' || drawable.shape === 'polygon'
+                  ? 'evenodd'
+                  : 'nonzero'
+              }
             />
           )
         }

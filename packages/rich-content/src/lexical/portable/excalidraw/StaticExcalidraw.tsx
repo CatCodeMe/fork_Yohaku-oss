@@ -195,7 +195,7 @@ const SceneFrame: FC<{
   theme: StaticTheme
 }> = ({ scene, showExpandButton, theme }) => {
   return (
-    <div className="relative size-full overflow-hidden rounded-md bg-(--surface-paper) ring-1 ring-border">
+    <div className="relative size-full overflow-hidden rounded-md bg-(--surface-paper) ring-1 ring-border ring-inset">
       <InteractiveScene
         files={scene.files}
         scene={scene}
